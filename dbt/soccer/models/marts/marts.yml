@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: dim_teams
+    description: One row per distinct team.
+    columns:
+      - name: team_id
+        tests:
+          - not_null
+          - unique
+      - name: team_name
+        tests:
+          - not_null
+          - unique
+
+  - name: fct_matches
+    description: One row per match, with team keys resolved against dim_teams.
+    columns:
+      - name: match_id
+        tests:
+          - not_null
+          - unique
+      - name: home_team_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_teams')
+              field: team_id
+      - name: away_team_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_teams')
+              field: team_id
+
+  - name: team_form
+    description: Rolling 5-match points and goal differential per team.
+    columns:
+      - name: match_id
+        tests:
+          - not_null
+
+  - name: home_away_splits
+    description: Wins/draws/losses and points, split by home vs away, per team.
+    columns:
+      - name: team
+        tests:
+          - not_null

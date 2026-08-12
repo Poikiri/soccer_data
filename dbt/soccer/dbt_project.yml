@@ -1,0 +1,14 @@
+name: soccer
+version: "1.0"
+profile: soccer
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  soccer:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

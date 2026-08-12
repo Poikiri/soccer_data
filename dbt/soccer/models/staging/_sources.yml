@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: matches
+        loaded_at_field: ingested_at
+        freshness:
+          warn_after: { count: 4, period: day }
+          error_after: { count: 8, period: day }
