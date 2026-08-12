@@ -74,6 +74,7 @@ def get_connection():
         user=os.environ.get("PGUSER", "soccer"),
         password=os.environ.get("PGPASSWORD", "soccer"),
         dbname=os.environ.get("PGDATABASE", "soccer"),
+        sslmode=os.environ.get("PGSSLMODE", "prefer"),
     )
 
 

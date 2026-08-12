@@ -8,5 +8,6 @@ soccer:
       user: "{{ env_var('PGUSER', 'soccer') }}"
       password: "{{ env_var('PGPASSWORD', 'soccer') }}"
       dbname: "{{ env_var('PGDATABASE', 'soccer') }}"
+      sslmode: "{{ env_var('PGSSLMODE', 'prefer') }}"
       schema: public
       threads: 4
