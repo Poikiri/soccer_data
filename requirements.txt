@@ -1,0 +1,4 @@
+psycopg2-binary==2.9.9
+requests==2.32.3
+prefect==3.8.2
+dbt-postgres==1.9.1
