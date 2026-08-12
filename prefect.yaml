@@ -1,0 +1,27 @@
+name: soccer-elt-pipeline
+
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/Poikiri/soccer_data.git
+      branch: main
+
+deployments:
+  - name: soccer-elt-scheduled
+    entrypoint: flows/pipeline.py:soccer_pipeline
+    work_pool:
+      name: soccer-managed-pool
+      job_variables:
+        pip_packages:
+          - psycopg2-binary==2.9.9
+          - requests==2.32.3
+          - dbt-postgres==1.9.1
+        env:
+          PGHOST: "{{ prefect.variables.pg_host }}"
+          PGPORT: "5432"
+          PGUSER: "{{ prefect.variables.pg_user }}"
+          PGDATABASE: "{{ prefect.variables.pg_database }}"
+          PGSSLMODE: "{{ prefect.variables.pg_sslmode }}"
+          PGPASSWORD: "{{ prefect.blocks.secret.pg-password }}"
+    schedules:
+      - cron: "0 6 * * 1,4"
+        timezone: America/Los_Angeles

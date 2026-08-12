@@ -52,14 +52,25 @@ docker compose exec postgres psql -U soccer -d soccer -c "select * from home_awa
 
 ## Run it on a schedule
 
+**Production**: deployed to [Prefect Cloud](https://app.prefect.cloud) on a
+`prefect:managed` work pool (`soccer-managed-pool`), so there's no server to
+keep alive — Prefect provisions the run, pip-installs `requirements.txt`'s
+packages, and executes `flows/pipeline.py:soccer_pipeline` on their
+infrastructure. Schedule: Mondays and Thursdays at 6am Pacific (the source
+updates Sunday/Wednesday nights). Configured in `prefect.yaml`; the flow
+connects to a hosted Postgres (Neon) via `PGHOST`/`PGUSER`/`PGDATABASE` set
+as Prefect Cloud variables and `PGPASSWORD` stored as a Prefect Secret
+block — `prefect.yaml` only references them by name, since this repo is
+public. To redeploy after changing `prefect.yaml`:
+
 ```bash
-make serve
+export PREFECT_API_KEY=<your key>
+.venv/bin/prefect deploy --no-prompt -n soccer-elt-scheduled
 ```
 
-Keeps a Prefect process alive that fires the same flow every Monday and
-Thursday morning (the source updates Sunday/Wednesday nights). Leave it
-running, or point Prefect's process manager / a `launchd`/`systemd` unit /
-cron at `make run` instead if you'd rather not keep a long-lived process.
+**Local alternative**: `make serve` keeps a Prefect process alive on this
+machine on the same schedule, running against the local Docker Postgres
+instead. Useful for dev/testing without touching the cloud deployment.
 
 ## Data quality tests
 
@@ -88,6 +99,7 @@ instead of silently building marts on top of it.
 
 - `ingest/ingest_matches.py` — pulls CSVs, lands raw rows in Postgres.
 - `dbt/soccer/` — dbt project (staging + marts + tests + source freshness).
-- `flows/pipeline.py` — Prefect flow tying ingest + dbt together, with the
-  schedule.
+- `flows/pipeline.py` — Prefect flow tying ingest + dbt together.
+- `prefect.yaml` — Prefect Cloud deployment config (managed work pool,
+  schedule, job variables).
 - `docker-compose.yml` — local Postgres.
