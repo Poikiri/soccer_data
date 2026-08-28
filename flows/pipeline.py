@@ -22,6 +22,13 @@ def ingest():
     return ingest_matches.run()
 
 
+@task(retries=2, retry_delay_seconds=30)
+def ingest_statsbomb():
+    sys.path.insert(0, str(REPO_ROOT / "ingest"))
+    import ingest_statsbomb
+    return ingest_statsbomb.run()
+
+
 def _run_dbt(*args: str) -> None:
     result = subprocess.run(
         [str(DBT_BIN), *args, "--project-dir", str(DBT_PROJECT_DIR), "--profiles-dir", str(DBT_PROJECT_DIR)],
@@ -48,12 +55,34 @@ def dbt_test():
     _run_dbt("test")
 
 
+# StatsBomb-derived models only -- rebuilding the football-data.co.uk models
+# on every StatsBomb run would be harmless but pointless.
+STATSBOMB_MODELS = ["stg_sb_matches", "stg_sb_events", "xg_form"]
+
+
+@task
+def dbt_run_statsbomb():
+    _run_dbt("run", "--select", *STATSBOMB_MODELS)
+
+
+@task
+def dbt_test_statsbomb():
+    _run_dbt("test", "--select", *STATSBOMB_MODELS)
+
+
 @flow(name="soccer-elt")
 def soccer_pipeline():
     ingest()
     dbt_source_freshness()
     dbt_run()
     dbt_test()
+
+
+@flow(name="statsbomb-elt")
+def statsbomb_pipeline():
+    ingest_statsbomb()
+    dbt_run_statsbomb()
+    dbt_test_statsbomb()
 
 
 if __name__ == "__main__":
