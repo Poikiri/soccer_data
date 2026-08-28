@@ -25,3 +25,25 @@ deployments:
     schedules:
       - cron: "0 6 * * 1,4"
         timezone: America/Los_Angeles
+
+  - name: statsbomb-elt-scheduled
+    entrypoint: flows/pipeline.py:statsbomb_pipeline
+    work_pool:
+      name: soccer-managed-pool
+      job_variables:
+        pip_packages:
+          - psycopg2-binary==2.9.9
+          - requests==2.32.3
+          - dbt-postgres==1.9.1
+        env:
+          PGHOST: "{{ prefect.variables.pg_host }}"
+          PGPORT: "5432"
+          PGUSER: "{{ prefect.variables.pg_user }}"
+          PGDATABASE: "{{ prefect.variables.pg_database }}"
+          PGSSLMODE: "{{ prefect.variables.pg_sslmode }}"
+          PGPASSWORD: "{{ prefect.blocks.secret.pg-password }}"
+    schedules:
+      # StatsBomb open data is a static historical dump, not a live feed --
+      # monthly is just a check for newly published competitions/seasons.
+      - cron: "0 6 1 * *"
+        timezone: America/Los_Angeles
