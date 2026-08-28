@@ -9,3 +9,7 @@ sources:
         freshness:
           warn_after: { count: 4, period: day }
           error_after: { count: 8, period: day }
+      # sb_matches/sb_events are a static historical pull (StatsBomb open data),
+      # not on a schedule -- no freshness check.
+      - name: sb_matches
+      - name: sb_events

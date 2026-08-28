@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_sb_matches
+    description: One row per StatsBomb match, typed from raw.sb_matches.
+    columns:
+      - name: match_id
+        tests:
+          - not_null
+          - unique
+      - name: match_date
+        tests:
+          - not_null
+      - name: home_team_id
+        tests:
+          - not_null
+      - name: away_team_id
+        tests:
+          - not_null
+
+  - name: stg_sb_events
+    description: StatsBomb Shot events, flattened from raw.sb_events (other event types aren't modeled yet).
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+          - unique
+      - name: match_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sb_matches')
+              field: match_id
+      - name: statsbomb_xg
+        tests:
+          - not_null
+      - name: outcome
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Goal", "Blocked", "Off T", "Post", "Saved", "Saved Off Target", "Saved to Post", "Wayward"]

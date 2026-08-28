@@ -46,3 +46,13 @@ models:
       - name: team
         tests:
           - not_null
+
+  - name: xg_form
+    description: Rolling 5-match xG for/against and actual goals per team (StatsBomb Shot events).
+    columns:
+      - name: match_id
+        tests:
+          - not_null
+      - name: team_id
+        tests:
+          - not_null
