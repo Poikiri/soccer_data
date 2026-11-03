@@ -3,6 +3,7 @@ Pulls match CSVs from football-data.co.uk and lands them raw and unmodified
 in Postgres. Idempotent: re-running only inserts fixtures not already loaded.
 """
 import csv
+import datetime
 import io
 import os
 
@@ -11,9 +12,26 @@ import requests
 
 BASE_URL = "https://www.football-data.co.uk/mmz4281/{season}/{div}.csv"
 
-# One division (Premier League), a few seasons for history.
+
+def current_season_code(today: "datetime.date | None" = None) -> str:
+    """Football-data.co.uk season code (e.g. "2627") for the Premier League
+    season in progress on `today`. The PL season starts in August, so any
+    date from July onward belongs to the season starting that calendar year.
+    """
+    today = today or datetime.date.today()
+    start_year = today.year if today.month >= 7 else today.year - 1
+    return f"{start_year % 100:02d}{(start_year + 1) % 100:02d}"
+
+
+# One division (Premier League). HISTORICAL_SEASONS is a fixed window of
+# past seasons; the season currently in progress is computed from today's
+# date rather than hardcoded, so this list can't silently go stale the way
+# it did in 2026 -- "2627" was missing for months, which meant every
+# ingest run quietly fetched zero new rows and dbt source freshness kept
+# failing on every scheduled run until someone noticed.
 DIVISIONS = ["E0"]
-SEASONS = ["2223", "2324", "2425", "2526"]
+HISTORICAL_SEASONS = ["2223", "2324", "2425", "2526"]
+SEASONS = sorted(set(HISTORICAL_SEASONS) | {current_season_code()})
 
 # Core match columns we keep. football-data.co.uk also ships ~100 betting-odds
 # columns per row; those aren't needed by anything downstream, so we don't land them.
